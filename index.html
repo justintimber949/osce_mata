@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSCE Simulator — Pemeriksaan Mata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4ed;
+    --bg-warm: #eeeade;
+    --ivory: #faf9f4;
+    --ivory-deep: #f0ede3;
+    --ink: #1c1a16;
+    --ink-mid: #4a4640;
+    --ink-soft: #8a8478;
+    --amber: #b5763a;
+    --amber-light: #d4956a;
+    --amber-pale: #f5e8d8;
+    --green: #3d6b4f;
+    --green-pale: #e3ede7;
+    --red: #8b3a3a;
+    --red-pale: #f5e3e3;
+    --gold: #c9a84c;
+    --gold-pale: #faf3dd;
+    --blue: #2a5280;
+    --blue-pale: #dde8f5;
+    --border: #ddd9ce;
+    --border-soft: #e8e4da;
+    --shadow: 0 2px 20px rgba(28,26,22,0.07);
+    --shadow-lg: 0 8px 40px rgba(28,26,22,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .app-header {
+    background: var(--ivory);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 12px rgba(28,26,22,0.06);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-icon {
+    width: 34px; height: 34px;
+    background: var(--ink);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg); font-size: 15px;
+  }
+  .brand-text h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px; font-weight: 600;
+    letter-spacing: 0.3px; color: var(--ink);
+  }
+  .brand-text p { font-size: 11px; color: var(--ink-soft); letter-spacing: 0.5px; text-transform: uppercase; }
+  .header-timer {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--ivory-deep);
+    border: 1px solid var(--border);
+    padding: 7px 15px; border-radius: 40px;
+    font-size: 15px; font-weight: 500; color: var(--ink-mid);
+    transition: all 0.3s;
+  }
+  .header-timer.warning { background: var(--red-pale); border-color: var(--red); color: var(--red); animation: pulse 1s infinite; }
+  .timer-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); transition: background 0.3s; }
+  .header-timer.warning .timer-dot { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* LAYOUT */
+  .app-body { max-width: 860px; margin: 0 auto; padding: 28px 18px 80px; }
+
+  /* WELCOME */
+  #welcome-screen { text-align: center; padding: 56px 20px; animation: fadeUp 0.6s ease; }
+  .welcome-eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); margin-bottom: 14px; font-weight: 500; }
+  .welcome-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(34px,6vw,52px); font-weight: 300; line-height: 1.15; color: var(--ink); margin-bottom: 18px; }
+  .welcome-title em { font-style: italic; color: var(--amber); }
+  .welcome-desc { max-width: 460px; margin: 0 auto 36px; color: var(--ink-mid); font-size: 15px; line-height: 1.75; }
+  .welcome-rules { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 10px; max-width: 580px; margin: 0 auto 44px; }
+  .rule-card { background: var(--ivory); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: left; }
+  .rule-card .rule-icon { font-size: 18px; margin-bottom: 7px; }
+  .rule-card strong { display: block; font-size: 13px; color: var(--ink); margin-bottom: 3px; }
+  .rule-card span { font-size: 12px; color: var(--ink-soft); }
+  .btn-start { background: var(--ink); color: var(--bg); border: none; padding: 13px 38px; border-radius: 40px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; letter-spacing: 0.3px; transition: all 0.2s; }
+  .btn-start:hover { background: var(--amber); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(181,118,58,0.3); }
+
+  /* PROGRESS */
+  .progress-nav { display: flex; gap: 5px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+  .progress-nav::-webkit-scrollbar { height: 3px; }
+  .progress-nav::-webkit-scrollbar-track { background: var(--border-soft); border-radius: 3px; }
+  .progress-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .prog-dot { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--ivory); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--ink-soft); transition: all 0.3s; position: relative; }
+  .prog-dot.active { border-color: var(--amber); background: var(--amber); color: white; }
+  .prog-dot.done { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+  .prog-dot.done::after { content: '✓'; position: absolute; font-size: 11px; }
+  .prog-dot.done span { display: none; }
+  .prog-line { flex: 1; height: 1.5px; background: var(--border); align-self: center; min-width: 6px; max-width: 18px; transition: background 0.3s; flex-shrink: 0; }
+  .prog-line.done { background: var(--green); }
+
+  /* CASE META */
+  .case-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; animation: fadeUp 0.4s ease; }
+  .case-badge { background: var(--ink); color: var(--bg); font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .diff-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; border: 1px solid; }
+  .diff-1 { background: var(--green-pale); color: var(--green); border-color: #b8d8c4; }
+  .diff-2 { background: var(--gold-pale); color: #7a6020; border-color: #e8d28a; }
+  .diff-3 { background: var(--amber-pale); color: var(--amber); border-color: #ddb88a; }
+  .diff-4 { background: var(--red-pale); color: var(--red); border-color: #d4a0a0; }
+
+  /* SCENARIO */
+  .scenario-card { background: var(--ivory); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); animation: fadeUp 0.5s ease; }
+  .scenario-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; color: var(--ink); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .scenario-text { background: var(--bg-warm); border-left: 3px solid var(--amber); padding: 14px 18px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 14.5px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 18px; }
+  .scenario-text strong { color: var(--ink); }
+
+  /* EXAM RESULTS BLOCK */
+  .exam-results { margin-top: 4px; }
+  .exam-results-title { font-size: 13px; font-weight: 600; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .exam-eye-block { background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .exam-eye-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .eye-tag { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 600; }
+  .od { background: #dde8f5; color: #2a5280; }
+  .os { background: #f5dddd; color: #802a2a; }
+  .exam-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; font-size: 13px; }
+  .exam-key { color: var(--ink-soft); min-width: 90px; font-size: 12px; flex-shrink: 0; }
+  .exam-val { color: var(--ink); font-weight: 500; }
+  .exam-trial { margin-top: 8px; }
+  .trial-header { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .trial-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-mid); padding: 2px 0; }
+  .trial-lens { min-width: 60px; font-weight: 500; font-family: monospace; color: var(--ink); }
+  .trial-vis { color: var(--ink-mid); }
+  .trial-tick { color: var(--green); font-weight: 700; font-size: 14px; }
+  .trial-arrow { color: var(--ink-soft); font-size: 11px; }
+
+  /* FORM */
+  .form-card { background: var(--ivory); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 14px; box-shadow: var(--shadow); animation: fadeUp 0.6s ease; }
+  .form-section-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-soft); display: flex; align-items: center; gap: 8px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+  .input-hint { font-size: 11px; color: var(--ink-soft); margin-top: 5px; }
+
+  /* DIAGNOSIS CHIPS */
+  .diag-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .diag-chip {
+    padding: 7px 14px; border-radius: 40px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; font-weight: 500;
+    color: var(--ink-mid);
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .diag-chip:hover { border-color: var(--amber); color: var(--amber); }
+  .diag-chip.selected {
+    border-color: var(--amber);
+    background: var(--amber-pale);
+    color: var(--amber);
+  }
+  .diag-chip.selected::before { content: '✓ '; font-weight: 700; }
+  .diag-selected-preview {
+    min-height: 32px; padding: 7px 12px;
+    background: var(--bg-warm); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--ink-mid);
+    border: 1px dashed var(--border);
+  }
+  .diag-selected-preview.empty { color: var(--ink-soft); font-style: italic; }
+
+  /* RESEP */
+  .resep-type-select { display: flex; gap: 10px; margin-bottom: 14px; }
+  .type-option { flex: 1; padding: 9px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); text-align: center; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink-mid); background: var(--bg); transition: all 0.2s; user-select: none; }
+  .type-option:hover { border-color: var(--amber); color: var(--amber); }
+  .type-option.selected { border-color: var(--amber); background: var(--amber-pale); color: var(--amber); }
+  .resep-table-wrap { overflow-x: auto; }
+  .resep-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .resep-table th { background: var(--bg-warm); border: 1px solid var(--border); padding: 8px 10px; text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+  .resep-table td { border: 1px solid var(--border); padding: 5px 7px; }
+  .resep-table td:first-child { background: var(--bg-warm); text-align: center; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+  .resep-table td.od-label { color: #2a5280; }
+  .resep-table td.os-label { color: #802a2a; }
+  .resep-table input { width: 100%; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); text-align: center; padding: 4px 2px; outline: none; }
+  .resep-table input:focus { background: rgba(181,118,58,0.07); border-radius: 4px; }
+  .adisi-note { font-size: 11px; color: var(--ink-soft); margin-top: 7px; font-style: italic; }
+  .hidden-adisi { display: none !important; }
+
+  /* SUBMIT */
+  .btn-submit { width: 100%; background: var(--ink); color: var(--bg); border: none; padding: 14px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; margin-top: 6px; }
+  .btn-submit:hover { background: var(--amber); box-shadow: 0 6px 20px rgba(181,118,58,0.3); }
+
+  /* RESULT */
+  #result-screen { animation: fadeUp 0.5s ease; }
+  .result-header { text-align: center; padding: 28px 20px 22px; background: var(--ivory); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; box-shadow: var(--shadow); }
+  .score-circle { width: 86px; height: 86px; border-radius: 50%; margin: 0 auto 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 600; }
+  .score-circle .score-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; line-height: 1; }
+  .score-circle .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .score-perfect { background: var(--green-pale); color: var(--green); border: 2px solid var(--green); }
+  .score-good { background: var(--gold-pale); color: #7a6020; border: 2px solid var(--gold); }
+  .score-fair { background: var(--amber-pale); color: var(--amber); border: 2px solid var(--amber); }
+  .score-poor { background: var(--red-pale); color: var(--red); border: 2px solid var(--red); }
+  .result-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+  .result-subtitle { font-size: 14px; color: var(--ink-mid); }
+  .feedback-section { background: var(--ivory); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .feedback-section h3 { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-soft); }
+  .feedback-item { border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; border: 1px solid; }
+  .feedback-item.correct { background: var(--green-pale); border-color: #b8d8c4; }
+  .feedback-item.partial { background: var(--gold-pale); border-color: #e8d28a; }
+  .feedback-item.wrong { background: var(--red-pale); border-color: #d4a0a0; }
+  .feedback-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+  .fb-label { font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .fb-status { font-size: 12px; font-weight: 500; color: var(--ink-mid); }
+  .fb-user-ans { font-size: 12.5px; color: var(--ink-mid); margin-bottom: 4px; }
+  .fb-user-ans span { font-weight: 500; color: var(--ink); }
+  .fb-correct-ans { font-size: 12.5px; color: var(--green); }
+  .fb-correct-ans span { font-weight: 600; }
+  .fb-explanation { font-size: 12.5px; color: var(--ink-mid); margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(0,0,0,0.07); line-height: 1.65; }
+
+  /* INSIGHT / TIPS */
+  .insight-card { background: linear-gradient(135deg,var(--ivory) 0%,var(--amber-pale) 100%); border: 1px solid #d4b88a; border-radius: var(--radius); padding: 22px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .insight-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--amber); margin-bottom: 12px; }
+  .insight-list { list-style: none; }
+  .insight-list li { padding: 7px 0 7px 18px; font-size: 13.5px; color: var(--ink-mid); line-height: 1.65; border-bottom: 1px solid rgba(181,118,58,0.15); position: relative; }
+  .insight-list li:last-child { border-bottom: none; }
+  .insight-list li::before { content: '→'; position: absolute; left: 0; color: var(--amber); font-size: 12px; top: 9px; }
+  .tips-card { background: linear-gradient(135deg,var(--ivory) 0%,var(--green-pale) 100%); border: 1px solid #b0d4bc; border-radius: var(--radius); padding: 22px; margin-bottom: 22px; box-shadow: var(--shadow); }
+  .tips-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--green); margin-bottom: 12px; }
+  .tips-list { list-style: none; }
+  .tips-list li { padding: 6px 0 6px 20px; font-size: 13.5px; color: var(--ink-mid); line-height: 1.6; position: relative; border-bottom: 1px solid rgba(61,107,79,0.12); }
+  .tips-list li:last-child { border-bottom: none; }
+  .tips-list li::before { content: '✦'; position: absolute; left: 0; color: var(--green); font-size: 10px; top: 9px; }
+
+  /* NEXT/FINISH */
+  .btn-next { width: 100%; background: var(--green); color: white; border: none; padding: 14px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-next:hover { background: #2d5a40; box-shadow: 0 6px 20px rgba(61,107,79,0.3); }
+  .btn-finish { background: var(--amber); }
+  .btn-finish:hover { background: #9a5f28 !important; }
+
+  /* COMPLETE */
+  #complete-screen { text-align: center; padding: 56px 20px; animation: fadeUp 0.6s ease; }
+  .complete-icon { font-size: 60px; margin-bottom: 18px; }
+  .complete-title { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300; color: var(--ink); margin-bottom: 12px; }
+  .complete-title em { font-style: italic; color: var(--amber); }
+  .complete-desc { font-size: 15px; color: var(--ink-mid); line-height: 1.75; max-width: 420px; margin: 0 auto 36px; }
+  .btn-restart { background: var(--ink); color: var(--bg); border: none; padding: 13px 38px; border-radius: 40px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-restart:hover { background: var(--amber); box-shadow: 0 6px 20px rgba(181,118,58,0.3); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--bg); padding: 11px 22px; border-radius: 40px; font-size: 13px; font-weight: 500; z-index: 999; transition: transform 0.3s ease; pointer-events: none; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.warning { background: var(--red); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  .hidden { display: none !important; }
+
+  @media(max-width:600px){
+    .app-header{padding:12px 14px;}
+    .app-body{padding:18px 10px 60px;}
+    .exam-grid{grid-template-columns:1fr;}
+    .welcome-rules{grid-template-columns:1fr 1fr;}
+    .resep-table input{font-size:13px;}
+    .resep-type-select{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">👁</div>
+    <div class="brand-text">
+      <h1>OSCE Simulator</h1>
+      <p>Pemeriksaan Mata — Refraksi</p>
+    </div>
+  </div>
+  <div class="header-timer hidden" id="timer-display">
+    <div class="timer-dot"></div>
+    <span id="timer-text">3:00</span>
+  </div>
+</header>
+<div class="toast" id="toast"></div>
+<div class="app-body">
+
+  <!-- WELCOME -->
+  <div id="welcome-screen">
+    <p class="welcome-eyebrow">Latihan OSCE</p>
+    <h1 class="welcome-title">Simulasi Pemeriksaan<br><em>Refraksi Mata</em></h1>
+    <p class="welcome-desc">Baca skenario klinis beserta hasil pemeriksaan, lalu tentukan diagnosis dan tulis resep kacamata yang tepat.</p>
+    <div class="welcome-rules">
+      <div class="rule-card"><div class="rule-icon">📋</div><strong>15 Kasus</strong><span>Bertingkat dari mudah hingga sangat kompleks</span></div>
+      <div class="rule-card"><div class="rule-icon">⏱</div><strong>3 Menit / Kasus</strong><span>Timer otomatis dengan peringatan 30 detik</span></div>
+      <div class="rule-card"><div class="rule-icon">🏷️</div><strong>Diagnosis Chip</strong><span>Klik komponen diagnosis — anti-typo</span></div>
+      <div class="rule-card"><div class="rule-icon">💬</div><strong>Feedback Detail</strong><span>Koreksi + penjelasan klinis tiap komponen</span></div>
+    </div>
+    <button class="btn-start" onclick="startApp()">Mulai Latihan →</button>
+  </div>
+
+  <!-- CASE -->
+  <div id="case-screen" class="hidden">
+    <div class="progress-nav" id="progress-nav"></div>
+    <div class="case-meta" id="case-meta"></div>
+    <div class="scenario-card" id="scenario-card"></div>
+    <div id="form-area"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-screen" class="hidden"></div>
+
+  <!-- COMPLETE -->
+  <div id="complete-screen" class="hidden">
+    <div class="complete-icon">🎓</div>
+    <h2 class="complete-title">Selamat!<br><em>Semua Kasus Selesai</em></h2>
+    <p class="complete-desc">Kamu telah menyelesaikan seluruh 15 kasus simulasi OSCE pemeriksaan refraksi mata. Terus berlatih untuk OSCE yang sesungguhnya!</p>
+    <button class="btn-restart" onclick="restartApp()">Mulai Ulang dari Awal →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// DIAGNOSIS CHIP OPTIONS
+// ═══════════════════════════════════
+const DIAG_CHIPS = [
+  "Miopia OD","Miopia OS","Miopia ODS",
+  "Hipermetropia OD","Hipermetropia OS","Hipermetropia ODS",
+  "Astigmatisma Miopia Simpleks OD","Astigmatisma Miopia Simpleks OS","Astigmatisma Miopia Simpleks ODS",
+  "Astigmatisma Miopia Kompositus OD","Astigmatisma Miopia Kompositus OS","Astigmatisma Miopia Kompositus ODS",
+  "Astigmatisma Hipermetropia Simpleks OD","Astigmatisma Hipermetropia Simpleks OS","Astigmatisma Hipermetropia Simpleks ODS",
+  "Astigmatisma Hipermetropia Kompositus OD","Astigmatisma Hipermetropia Kompositus OS","Astigmatisma Hipermetropia Kompositus ODS",
+  "Astigmatisma Mixtus OD","Astigmatisma Mixtus OS","Astigmatisma Mixtus ODS",
+  "Presbiopia",
+  "Anisometropia"
+];
+
+// ═══════════════════════════════════
+// 15 CASES
+// ═══════════════════════════════════
+const CASES = [
+{
+  id:1, title:"Kasus 1 — Presbiopia Murni", difficulty:1, diffLabel:"Sangat Mudah",
+  scenario:`Ny. Sari, <strong>45 tahun</strong>, seorang guru, datang dengan keluhan <strong>kesulitan membaca tulisan kecil sejak 1 tahun terakhir</strong>. Pasien harus menjauhkan buku agar bisa membaca dengan jelas. Penglihatan jauh tidak ada keluhan. Belum pernah memakai kacamata sebelumnya.`,
+  examData: {
+    od: { visus:"6/6", ph:"tidak membaik", trial:[{lens:"Plano",vis:"6/6",ok:true}], trialNote:"Tidak diperlukan koreksi jauh" },
+    os: { visus:"6/6", ph:"tidak membaik", trial:[{lens:"Plano",vis:"6/6",ok:true}], trialNote:"Tidak diperlukan koreksi jauh" }
+  },
+  answerKey: {
+    diagnosis: ["Presbiopia"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"0",odCyl:"0",odAxis:"-",odAdisi:"+2.00", osSph:"0",osCyl:"0",osAxis:"-",osAdisi:"+2.00" }
+  },
+  explanation:{
+    diagnosis:"Presbiopia murni: visus jauh 6/6 bilateral, keluhan khas baca menjauh pada usia ≥40 tahun.",
+    resep:"Kacamata baca monofokal: Sph 0 (tidak ada kelainan refraksi jauh), Adisi +2.00 untuk usia 45 tahun.",
+    insight:["Presbiopia BUKAN kelainan refraksi — proses fisiologis penuaan lensa.","Adisi +2.00 standar untuk usia 45 tahun. Bertambah +0.25 setiap ~2 tahun.","Monofokal baca cocok jika penglihatan jauh normal. Bifokal jika ada kelainan refraksi jauh."],
+    tips:["Di OSCE: sebutkan 'near vision chart Jaeger' untuk konfirmasi presbiopia.","Edukasi pasien: kondisi ini tidak dapat disembuhkan, hanya dikoreksi.","Monofokal vs bifokal: sebutkan alasan pemilihan kepada penguji."]
+  }
+},
+{
+  id:2, title:"Kasus 2 — Miopia Ringan Asimetris", difficulty:1, diffLabel:"Sangat Mudah",
+  scenario:`Tn. Dani, <strong>19 tahun</strong>, mahasiswa, mengeluh <strong>penglihatan jauh buram</strong> sejak 2 tahun. Lebih buram pada mata kanan daripada kiri. Saat di kelas, papan tulis tidak jelas. Penglihatan dekat baik. Tidak ada mata merah atau nyeri.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/6", trial:[{lens:"-0.50",vis:"6/12"},{lens:"-1.00",vis:"6/9"},{lens:"-1.50",vis:"6/6",ok:true},{lens:"-2.00",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/12", ph:"membaik 6/6", trial:[{lens:"-0.50",vis:"6/9"},{lens:"-1.00",vis:"6/6",ok:true},{lens:"-1.25",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Miopia OD","Miopia OS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"-1.50",odCyl:"0",odAxis:"-",odAdisi:"-", osSph:"-1.00",osCyl:"0",osAxis:"-",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Miopia bilateral dengan derajat berbeda (anisometropia ringan): OD -1.50D, OS -1.00D. Pilih chip OD dan OS terpisah karena derajat berbeda.",
+    resep:"Koreksi sferis negatif berbeda: OD -1.50, OS -1.00. Usia 19 tahun, tanpa presbiopia — monofokal tanpa adisi. Gunakan koreksi terkecil yang memberikan visus terbaik.",
+    insight:["Perbedaan refraksi antar mata (anisometropia) perlu dideteksi dan dikoreksi sejak dini.","Visus 6/18 ≈ miopia -1.50D; visus 6/12 ≈ miopia -1.00D (panduan kasar).","Pinhole membaik = kelainan refraksi — dapat dikoreksi kacamata.","Koreksi terkecil yang memberikan visus optimal mencegah over-minus."],
+    tips:["Tanyakan riwayat keluarga memakai kacamata (faktor genetik).","Saat OSCE: lakukan pinhole SEBELUM trial lens.","Untuk miopia muda: pertimbangkan kemungkinan progresivitas."]
+  }
+},
+{
+  id:3, title:"Kasus 3 — Hipermetropia Ringan", difficulty:1, diffLabel:"Mudah",
+  scenario:`Ny. Wulan, <strong>30 tahun</strong>, ibu rumah tangga, datang dengan keluhan <strong>nyeri kepala frontal setelah membaca lama</strong> dan mata mudah lelah. Penglihatan dekat kadang sedikit buram setelah beberapa menit membaca. Penglihatan jauh relatif baik. Tidak ada riwayat kacamata.`,
+  examData:{
+    od:{ visus:"6/9", ph:"membaik 6/6", trial:[{lens:"+0.50",vis:"6/9"},{lens:"+1.00",vis:"6/6",ok:true},{lens:"+1.25",vis:"sedikit buram"}] },
+    os:{ visus:"6/9", ph:"membaik 6/6", trial:[{lens:"+0.50",vis:"6/9"},{lens:"+1.00",vis:"6/6",ok:true},{lens:"+1.25",vis:"sedikit buram"}] }
+  },
+  answerKey:{
+    diagnosis:["Hipermetropia ODS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"+1.00",odCyl:"0",odAxis:"-",odAdisi:"-", osSph:"+1.00",osCyl:"0",osAxis:"-",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Hipermetropia ODS: nyeri kepala, asthenopia, sedikit buram dekat. Visus jauh masih 6/9 (akomodasi mengkompensasi).",
+    resep:"Sferis positif +1.00 untuk mengurangi beban akomodasi. Usia 30 tahun belum perlu adisi.",
+    insight:["Hipermetropia ringan pada dewasa muda sering 'tersembunyi' karena akomodasi mengkompensasi.","Gejala khas: sakit kepala frontal, mata lelah setelah membaca (asthenopia).","Koreksi positif (plus) — berlawanan dengan miopia.","Pada anak, hipermetropia tidak terkoreksi bisa menyebabkan ambliopia."],
+    tips:["OSCE: sebut kemungkinan hipermetropia laten (perlu sikloplegia untuk koreksi penuh pada muda).","Gejala asthenopia = clue kuat hipermetropia pada dewasa muda.","Bedakan: hipermetropia buram dekat DAN jauh (setelah lama); miopia buram jauh saja."]
+  }
+},
+{
+  id:4, title:"Kasus 4 — Miopia + Presbiopia", difficulty:2, diffLabel:"Mudah",
+  scenario:`Tn. Budi, <strong>52 tahun</strong>, pegawai kantoran, mengeluh <strong>penglihatan jauh dan dekat sama-sama buram</strong>. Selama ini memakai kacamata minus untuk penglihatan jauh. Sekarang untuk membaca pun terasa kesulitan. Riwayat memakai kacamata -1.50 sejak usia muda.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/6", trial:[{lens:"-1.00",vis:"6/12"},{lens:"-1.50",vis:"6/6",ok:true},{lens:"-2.00",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/18", ph:"membaik 6/6", trial:[{lens:"-1.00",vis:"6/12"},{lens:"-1.50",vis:"6/6",ok:true},{lens:"-2.00",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Miopia ODS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"-1.50",odCyl:"0",odAxis:"-",odAdisi:"+2.00", osSph:"-1.50",osCyl:"0",osAxis:"-",osAdisi:"+2.00" }
+  },
+  explanation:{
+    diagnosis:"Miopia ODS + Presbiopia: keluhan jauh dan dekat pada usia >45 tahun dengan riwayat miopia.",
+    resep:"Bifokal: bagian atas untuk jauh (-1.50), bagian bawah untuk dekat (-1.50 + 2.00 = +0.50). Adisi +2.00 untuk usia 52 tahun.",
+    insight:["Bifokal dipilih saat ada DUA kelainan: refraksi jauh + presbiopia.","Total kekuatan dekat = Sph jauh + Adisi. Contoh: -1.50 + 2.00 = +0.50.","Progressive lenses = alternatif modern bifokal tanpa garis tampak."],
+    tips:["OSCE: jelaskan mengapa pilih bifokal bukan dua kacamata terpisah.","Selalu tulis adisi dengan tanda '+' di kolom adisi, bukan di kolom Sph.","Edukasi pasien: butuh adaptasi 1-2 minggu untuk bifokal."]
+  }
+},
+{
+  id:5, title:"Kasus 5 — Hipermetropia + Presbiopia", difficulty:2, diffLabel:"Mudah",
+  scenario:`Ny. Ratna, <strong>55 tahun</strong>, pensiunan guru, mengeluh <strong>penglihatan jauh dan dekat buram</strong>. Baru pertama kali memakai kacamata. Sering nyeri kepala dan mata terasa pegal. Tidak ada riwayat diabetes atau hipertensi.`,
+  examData:{
+    od:{ visus:"6/12", ph:"membaik 6/6", trial:[{lens:"+1.00",vis:"6/9"},{lens:"+1.50",vis:"6/6",ok:true},{lens:"+2.00",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/12", ph:"membaik 6/6", trial:[{lens:"+1.00",vis:"6/9"},{lens:"+1.50",vis:"6/6",ok:true},{lens:"+2.00",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Hipermetropia ODS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"+1.50",odCyl:"0",odAxis:"-",odAdisi:"+2.50", osSph:"+1.50",osCyl:"0",osAxis:"-",osAdisi:"+2.50" }
+  },
+  explanation:{
+    diagnosis:"Hipermetropia ODS + Presbiopia: buram jauh-dekat, nyeri kepala, usia 55 tahun tanpa riwayat kacamata sebelumnya.",
+    resep:"Sph +1.50 untuk koreksi jauh. Adisi +2.50 untuk usia 55 tahun. Bifokal karena ada dua kelainan.",
+    insight:["Hipermetropia + presbiopia: KEDUANYA menyebabkan buram dekat, mekanisme berbeda.","Adisi +2.50 untuk usia 55 tahun. Makin tua makin besar (maks ~+3.00).","Total koreksi dekat: +1.50 + 2.50 = +4.00 — kacamata baca sangat positif."],
+    tips:["Bedakan hipermetropia dengan presbiopia saat presentasi OSCE.","Pada usia >50, hipermetropia sering terungkap karena akomodasi tidak bisa kompensasi.","Koreksi lengkap hipermetropia pada muda butuh sikloplegia."]
+  }
+},
+{
+  id:6, title:"Kasus 6 — Astigmatisma Miopia Simpleks ODS", difficulty:3, diffLabel:"Sedang",
+  scenario:`Sdr. Riko, <strong>22 tahun</strong>, mahasiswa teknik, mengeluh <strong>penglihatan buram dan bayangan objek terlihat berganda/miring</strong> saat melihat jauh. Terkadang menyipitkan mata untuk memperjelas. Tidak ada keluhan dekat. Belum pernah pakai kacamata.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"Plano -1.50×180",vis:"6/6",ok:true},{lens:"Plano -1.00×180",vis:"6/9"},{lens:"-0.50 -1.50×180",vis:"tidak lebih baik"}], trialNote:"Koreksi silinder saja sudah cukup (astigmat simpleks)" },
+    os:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"Plano -1.50×180",vis:"6/6",ok:true},{lens:"Plano -1.25×180",vis:"6/9"}], trialNote:"Axis 180 pada kedua mata (ATR — against the rule)" }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Miopia Simpleks ODS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"0",odCyl:"-1.50",odAxis:"180",odAdisi:"-", osSph:"0",osCyl:"-1.50",osAxis:"180",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Astigmatisma Miopia Simpleks ODS: satu meridian fokus di retina, satu di depan retina. Koreksi silinder saja sudah memberikan 6/6.",
+    resep:"Sph 0 (tidak ada komponen sferis), Cyl -1.50 axis 180. Monofokal tanpa adisi (usia muda).",
+    insight:["Astigmat simpleks: satu meridian emetropia, satu miopik. Koreksi cyl saja tanpa sph.","Menyipitkan mata = efek pinhole alami — clue astigmatisma.","ATR (against the rule): axis silinder 180° — lebih umum pada orang muda."],
+    tips:["Gunakan Jackson Cross Cylinder (JCC) untuk memperhalus axis dan kekuatan silinder.","Astigmat simpleks: jika Sph 0, artinya satu meridian sudah fokus di retina.","Bedakan astigmat simpleks vs kompositus vs mixtus — penting di OSCE!"]
+  }
+},
+{
+  id:7, title:"Kasus 7 — Astigmatisma Miopia Kompositus ODS", difficulty:3, diffLabel:"Sedang",
+  scenario:`Nn. Putri, <strong>17 tahun</strong>, pelajar, mengeluh <strong>penglihatan jauh buram disertai distorsi bayangan</strong>. Mata kanan lebih buram dari kiri. Sering sakit kepala setelah belajar lama. Pernah periksa mata 3 tahun lalu dan dikatakan perlu kacamata tapi tidak jadi dipakai.`,
+  examData:{
+    od:{ visus:"6/24", ph:"membaik 6/9", trial:[{lens:"-1.00 -1.50×90",vis:"6/9"},{lens:"-1.50 -1.50×90",vis:"6/6",ok:true},{lens:"-1.50 -2.00×90",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/18", ph:"membaik 6/6", trial:[{lens:"-0.50 -1.00×90",vis:"6/9"},{lens:"-1.00 -1.00×90",vis:"6/6",ok:true},{lens:"-1.00 -1.50×90",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Miopia Kompositus OD","Astigmatisma Miopia Kompositus OS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"-1.50",odCyl:"-1.50",odAxis:"90",odAdisi:"-", osSph:"-1.00",osCyl:"-1.00",osAxis:"90",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Astigmat Miopia Kompositus bilateral (kedua meridian miopik, derajat berbeda). OD lebih berat dari OS — perlu diagnosis terpisah.",
+    resep:"OD: -1.50 -1.50×90. OS: -1.00 -1.00×90. Kedua meridian miopik (Sph negatif + Cyl negatif). Monofokal usia muda.",
+    insight:["Astigmat kompositus: KEDUA meridian miopik — perlu koreksi Sph negatif + Cyl negatif.","Axis 90° (WTR — with the rule): lebih umum pada pasien muda.","OD dan OS berbeda derajat — tulis resep terpisah."],
+    tips:["Jika Sph dan Cyl keduanya negatif → astigmat miopia kompositus.","WTR (with the rule): axis silinder 90° — meridian vertikal lebih kuat.","Pasien belum pakai kacamata lama → edukasi pentingnya koreksi sejak dini."]
+  }
+},
+{
+  id:8, title:"Kasus 8 — Anisometropia (Miopia vs Hipermetropia)", difficulty:3, diffLabel:"Sedang",
+  scenario:`Anak Bima, <strong>10 tahun</strong>, dibawa ibunya karena <strong>sering memiringkan kepala dan satu mata terlihat lebih sering dipejamkan</strong>. Guru di sekolah melaporkan anak sering tidak bisa membaca tulisan di papan tulis. Tidak ada riwayat trauma. Belum pernah periksa mata sebelumnya.`,
+  examData:{
+    od:{ visus:"6/6", ph:"tidak membaik", trial:[{lens:"Plano",vis:"6/6",ok:true}], trialNote:"Mata kanan emetropia" },
+    os:{ visus:"6/36", ph:"membaik 6/12", trial:[{lens:"-2.50",vis:"6/18"},{lens:"-3.00",vis:"6/12",ok:true},{lens:"-3.50",vis:"tidak lebih baik"}], trialNote:"Koreksi tidak mencapai 6/6 — curiga ambliopia" }
+  },
+  answerKey:{
+    diagnosis:["Miopia OS","Anisometropia"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"0",odCyl:"0",odAxis:"-",odAdisi:"-", osSph:"-3.00",osCyl:"0",osAxis:"-",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Miopia OS + Anisometropia: OD emetropia, OS miopia -3.00D. Perbedaan refraksi >2.00D antar mata = anisometropia bermakna. Curiga ambliopia OS.",
+    resep:"OD: Sph 0 (tidak dikoreksi). OS: -3.00. Koreksi segera penting untuk cegah/mengatasi ambliopia.",
+    insight:["Anisometropia >2.00D pada anak sangat berisiko ambliopia (mata malas).","Visus OS hanya membaik ke 6/12 meski dikoreksi penuh → kemungkinan ambliopia sudah ada.","Tatalaksana: kacamata + occlusion therapy (penutup mata kanan untuk melatih OS).","Pikirkan anisometropia bila anak sering menutup/memiringkan kepala ke satu sisi."],
+    tips:["OSCE: sebutkan kecurigaan ambliopia dan rencana occlusion therapy.","Anisometropia: koreksi PENUH meski terasa tidak nyaman di awal (toleransi anak lebih baik).","Rujuk ke spesialis mata anak / orthoptis untuk evaluasi lebih lanjut."]
+  }
+},
+{
+  id:9, title:"Kasus 9 — Astigmatisma Mixtus OD, Miopia OS", difficulty:3, diffLabel:"Sedang",
+  scenario:`Ny. Citra, <strong>28 tahun</strong>, desainer grafis, mengeluh <strong>penglihatan buram dan melihat garis lurus tampak miring/bengkok</strong> terutama pada mata kanan. Mata kiri hanya buram jauh. Sering pusing saat berpindah dari layar komputer ke jendela jauh.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"+0.50 -2.00×70",vis:"6/9"},{lens:"+0.75 -2.00×70",vis:"6/6",ok:true},{lens:"+0.75 -2.50×70",vis:"tidak lebih baik"}], trialNote:"Satu meridian hipermetrop, satu miopik = mixtus" },
+    os:{ visus:"6/12", ph:"membaik 6/6", trial:[{lens:"-0.75",vis:"6/9"},{lens:"-1.00",vis:"6/6",ok:true},{lens:"-1.25",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Mixtus OD","Miopia OS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"+0.75",odCyl:"-2.00",odAxis:"70",odAdisi:"-", osSph:"-1.00",osCyl:"0",osAxis:"-",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"OD: Astigmat Mixtus (satu meridian hipermetrop +0.75, satu miopik melalui silinder -2.00). OS: Miopia murni -1.00D.",
+    resep:"OD: +0.75 -2.00×70. OS: -1.00. Monofokal usia 28 tahun.",
+    insight:["Astigmat mixtus: satu meridian hipermetrop, satu miopik. Sph bisa + atau -, Cyl negatif.","Axis miring (70°) bukan 90° atau 180° — oblique astigmatism, lebih jarang.","Dua mata berbeda jenis kelainan (mixtus vs miopia) — diagnosis terpisah."],
+    tips:["Astigmat mixtus: ketika Sph positif + Cyl negatif dan |Cyl|>|Sph|, meridian lain miopik.","Axis oblique (30°-60° atau 120°-150°) sering menyebabkan distorsi lebih nyata.","Bedakan 3 jenis astigmat: simpleks, kompositus, mixtus — hafalkan definisinya."]
+  }
+},
+{
+  id:10, title:"Kasus 10 — Hipermetropia Asimetris + Presbiopia", difficulty:3, diffLabel:"Sedang",
+  scenario:`Tn. Hendra, <strong>50 tahun</strong>, pengusaha, mengeluh <strong>penglihatan jauh dan dekat buram</strong>, lebih berat pada mata kiri. Dulu bisa melihat jauh dengan baik, kini harus mendekatkan benda untuk membaca. Tidak ada riwayat kacamata. Tidak ada DM atau HT.`,
+  examData:{
+    od:{ visus:"6/9", ph:"membaik 6/6", trial:[{lens:"+0.75",vis:"6/6",ok:true},{lens:"+1.00",vis:"sedikit buram"}] },
+    os:{ visus:"6/18", ph:"membaik 6/6", trial:[{lens:"+1.00",vis:"6/12"},{lens:"+1.50",vis:"6/9"},{lens:"+2.00",vis:"6/6",ok:true},{lens:"+2.25",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Hipermetropia OD","Hipermetropia OS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"+0.75",odCyl:"0",odAxis:"-",odAdisi:"+2.00", osSph:"+2.00",osCyl:"0",osAxis:"-",osAdisi:"+2.00" }
+  },
+  explanation:{
+    diagnosis:"Hipermetropia asimetris ODS (OD +0.75, OS +2.00) + Presbiopia. Perbedaan derajat hipermetropia antar mata — diagnosis OD dan OS terpisah.",
+    resep:"OD: +0.75 Add +2.00. OS: +2.00 Add +2.00. Bifokal. Adisi +2.00 untuk usia 50 tahun.",
+    insight:["Hipermetropia asimetris: derajat berbeda per mata — resep OD ≠ OS.","Usia 50 tahun: akomodasi sudah menurun drastis, hipermetropia tidak bisa dikompensasi lagi.","Total dekat OD: +0.75+2.00=+2.75. OS: +2.00+2.00=+4.00."],
+    tips:["Selalu periksa tiap mata secara terpisah — jangan asumsi simetris.","Bifokal dengan hipermetropia: pastikan Sph positif + Adisi, bukan digabung.","Usia 50 tahun → adisi +2.00 standar."]
+  }
+},
+{
+  id:11, title:"Kasus 11 — Astigmat Miopia Kompositus + Presbiopia", difficulty:4, diffLabel:"Sulit",
+  scenario:`Ny. Dewi, <strong>48 tahun</strong>, akuntan, mengeluh <strong>penglihatan jauh buram dengan distorsi dan kesulitan membaca sejak 6 bulan</strong>. Sebelumnya memakai kacamata silinder tapi hilang. Keluhan membaca baru muncul 1 tahun terakhir. Riwayat kacamata: OD -1.00 -0.75×180, OS -0.75 -1.00×180.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"-1.00 -0.75×180",vis:"6/9"},{lens:"-1.25 -0.75×180",vis:"6/6",ok:true},{lens:"-1.50 -0.75×180",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/12", ph:"membaik 6/9", trial:[{lens:"-0.75 -1.00×180",vis:"6/9"},{lens:"-0.75 -1.25×180",vis:"6/6",ok:true},{lens:"-1.00 -1.25×180",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Miopia Kompositus OD","Astigmatisma Miopia Kompositus OS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"-1.25",odCyl:"-0.75",odAxis:"180",odAdisi:"+1.50", osSph:"-0.75",osCyl:"-1.25",osAxis:"180",osAdisi:"+1.50" }
+  },
+  explanation:{
+    diagnosis:"Astigmat Miopia Kompositus bilateral (Sph negatif + Cyl negatif) + Presbiopia. Usia 48 tahun = early presbyopia.",
+    resep:"OD: -1.25 -0.75×180 Add +1.50. OS: -0.75 -1.25×180 Add +1.50. Bifokal. Adisi +1.50 untuk awal presbiopia usia 48.",
+    insight:["Presbiopia awal (usia 48): adisi +1.50 — belum butuh +2.00.","Astigmat kompositus + presbiopia = bifokal dengan Sph, Cyl, Adisi semua diisi.","Riwayat resep lama berguna sebagai titik awal pemeriksaan trial."],
+    tips:["Adisi +1.50 untuk usia 46-48 tahun — jangan terlalu besar di awal presbiopia.","Bifokal dengan silinder: tulis semua komponen lengkap — Sph, Cyl, Axis, Adisi.","Bandingkan dengan resep lama untuk validasi — perubahan drastis perlu dicurigai."]
+  }
+},
+{
+  id:12, title:"Kasus 12 — Miopia Tinggi ODS", difficulty:4, diffLabel:"Sulit",
+  scenario:`Tn. Arif, <strong>35 tahun</strong>, programmer, mengeluh <strong>penglihatan jauh sangat buram</strong>. Sudah memakai kacamata -5.00 sejak SMP tapi terasa tidak cukup. Ada keluhan melihat kilatan cahaya sesekali dan floaters beberapa titik hitam melayang. Tidak ada keluhan dekat.`,
+  examData:{
+    od:{ visus:"1/60", ph:"membaik 6/18", trial:[{lens:"-5.50",vis:"6/24"},{lens:"-6.00",vis:"6/18"},{lens:"-6.50",vis:"6/18",ok:true},{lens:"-7.00",vis:"tidak lebih baik"}], trialNote:"Koreksi tidak mencapai 6/6 — curiga perubahan retina perifer" },
+    os:{ visus:"1/60", ph:"membaik 6/18", trial:[{lens:"-5.50",vis:"6/24"},{lens:"-6.00",vis:"6/18",ok:true},{lens:"-6.50",vis:"tidak lebih baik"}], trialNote:"OS sedikit lebih baik dari OD" }
+  },
+  answerKey:{
+    diagnosis:["Miopia OD","Miopia OS"],
+    jenisKacamata:"monofokal",
+    resep:{ odSph:"-6.50",odCyl:"0",odAxis:"-",odAdisi:"-", osSph:"-6.00",osCyl:"0",osAxis:"-",osAdisi:"-" }
+  },
+  explanation:{
+    diagnosis:"Miopia tinggi bilateral (OD -6.50, OS -6.00). Koreksi tidak mencapai 6/6 → kemungkinan komplikasi (perubahan makula/retina pada miopia tinggi).",
+    resep:"OD: -6.50. OS: -6.00. Monofokal. Usia 35 tahun, belum ada presbiopia. WAJIB rujuk retina karena floaters + kilatan cahaya.",
+    insight:["Miopia >-6.00 = miopia tinggi — risiko ablasi retina, degenerasi makula miopik.","Floaters + kilatan cahaya = gejala yang HARUS dirujuk — kemungkinan robekan retina.","Koreksi tidak mencapai 6/6 meski refraksi sudah optimal = ada masalah organik.","Pilih koreksi terkecil yang memberikan visus terbaik — overcorrection tidak menambah visus."],
+    tips:["OSCE WAJIB sebutkan: rujuk spesialis retina segera karena floaters + fotopsia.","Miopia tinggi: periksa fundus — cari staphyloma posterior, atrofi peripapiler.","Resep lensa tipis khusus (high-index) untuk kenyamanan pasien miopia tinggi."]
+  }
+},
+{
+  id:13, title:"Kasus 13 — Astigmat Hipermetropia Kompositus ODS + Presbiopia", difficulty:4, diffLabel:"Sulit",
+  scenario:`Ny. Sri, <strong>53 tahun</strong>, sekretaris, mengeluh <strong>penglihatan jauh buram dan distorsi serta kesulitan membaca</strong>. Kepala sering miring ke kanan saat membaca. Riwayat memakai kacamata plus tapi tidak tahu ukurannya. Tidak ada DM. Hipertensi terkontrol.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"+1.00 -1.50×90",vis:"6/9"},{lens:"+1.50 -1.50×90",vis:"6/6",ok:true},{lens:"+1.50 -2.00×90",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/12", ph:"membaik 6/9", trial:[{lens:"+0.75 -1.00×90",vis:"6/9"},{lens:"+1.00 -1.00×90",vis:"6/6",ok:true},{lens:"+1.25 -1.00×90",vis:"tidak lebih baik"}] }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Hipermetropia Kompositus OD","Astigmatisma Hipermetropia Kompositus OS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"+1.50",odCyl:"-1.50",odAxis:"90",odAdisi:"+2.50", osSph:"+1.00",osCyl:"-1.00",osAxis:"90",osAdisi:"+2.50" }
+  },
+  explanation:{
+    diagnosis:"Astigmat Hipermetropia Kompositus bilateral (Sph positif + Cyl negatif, kedua meridian hipermetrop) + Presbiopia usia 53 tahun.",
+    resep:"OD: +1.50 -1.50×90 Add +2.50. OS: +1.00 -1.00×90 Add +2.50. Bifokal. Adisi +2.50 untuk usia 53.",
+    insight:["Astigmat hipermetropia kompositus: Sph positif + Cyl negatif, |Sph|>|Cyl| tidak berlaku — keduanya hipermetrop.","Kepala miring = kompensasi untuk mencari meridian terbaik — clue astigmatisma.","Adisi +2.50 untuk usia 53 tahun."],
+    tips:["Astigmat hipermetrop kompositus: Sph + → keduanya hipermetrop (bukan mixtus!).","Bedakan: Sph+ Cyl- → bisa kompositus hipermetrop ATAU mixtus, tergantung |Sph| vs |Cyl|.","Edukasi kepala miring: setelah pakai kacamata koreksi penuh, kepala miring akan hilang sendiri."]
+  }
+},
+{
+  id:14, title:"Kasus 14 — Miopia Tinggi + Astigmat + Presbiopia (OD≠OS)", difficulty:5, diffLabel:"Sangat Sulit",
+  scenario:`Tn. Fajar, <strong>56 tahun</strong>, pensiunan dokter, mengeluh <strong>penglihatan sangat buram jauh maupun dekat</strong>. Kacamata lama tidak menolong. Riwayat miopia berat sejak muda. Ada floaters lama. Mata kanan lebih buram dari kiri. Hipertensi terkontrol dengan obat.`,
+  examData:{
+    od:{ visus:"1/60", ph:"membaik 6/24", trial:[{lens:"-6.50 -1.50×90",vis:"6/18"},{lens:"-7.00 -1.50×90",vis:"6/18",ok:true},{lens:"-7.50 -1.50×90",vis:"tidak lebih baik"}], trialNote:"Koreksi tidak mencapai 6/6 — perubahan makula miopik OD" },
+    os:{ visus:"6/36", ph:"membaik 6/12", trial:[{lens:"-5.00 -1.00×90",vis:"6/18"},{lens:"-5.50 -1.00×90",vis:"6/12"},{lens:"-6.00 -1.00×90",vis:"6/12",ok:true},{lens:"-6.00 -1.50×90",vis:"tidak lebih baik"}], trialNote:"OS membaik lebih baik dari OD" }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Miopia Kompositus OD","Astigmatisma Miopia Kompositus OS","Presbiopia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"-7.00",odCyl:"-1.50",odAxis:"90",odAdisi:"+2.50", osSph:"-6.00",osCyl:"-1.00",osAxis:"90",osAdisi:"+2.50" }
+  },
+  explanation:{
+    diagnosis:"Astigmat Miopia Kompositus bilateral (derajat berbeda OD≠OS) + Presbiopia usia 56 tahun.",
+    resep:"OD: -7.00 -1.50×90 Add +2.50. OS: -6.00 -1.00×90 Add +2.50. Bifokal kompleks. Adisi +2.50 usia 56.",
+    insight:["Triple kelainan per mata: Sph, Cyl, dan Adisi semuanya harus ditentukan.","OD lebih berat — koreksi tidak mencapai 6/6 (kemungkinan maculopathy miopik).","Floaters + miopia tinggi = WAJIB rujuk retina untuk menyingkirkan ablasi retina."],
+    tips:["OSCE: identifikasi ketiga komponen secara sistematis sebelum menulis resep.","Miopia tinggi bilateral asimetris: tulis resep OD dan OS berbeda dengan teliti.","Sebutkan diagnosis banding komplikasi (ablasi retina, degenerasi makula miopik) kepada penguji."]
+  }
+},
+{
+  id:15, title:"Kasus 15 — Triple Patologi Kompleks + Anisometropia", difficulty:5, diffLabel:"Sangat Sulit",
+  scenario:`Ny. Linda, <strong>60 tahun</strong>, dosen, mengeluh <strong>penglihatan sangat kabur dengan distorsi, terutama mata kiri</strong>. Mata kanan masih bisa membaca meski buram. Riwayat DM terkontrol 10 tahun, HT terkontrol. Pernah operasi katarak OS 5 tahun lalu, belum diresepkan kacamata baru setelah operasi.`,
+  examData:{
+    od:{ visus:"6/18", ph:"membaik 6/9", trial:[{lens:"-1.00 -1.00×80",vis:"6/9"},{lens:"-1.25 -1.00×80",vis:"6/6",ok:true},{lens:"-1.25 -1.50×80",vis:"tidak lebih baik"}] },
+    os:{ visus:"6/24", ph:"membaik 6/12", trial:[{lens:"+2.50",vis:"6/18"},{lens:"+3.00",vis:"6/12",ok:true},{lens:"+3.00 -0.75×100",vis:"6/12",ok:true},{lens:"+3.50",vis:"tidak lebih baik"}], trialNote:"Post-katarak OS: afakia/pseudofakia — perlu koreksi sferis positif besar" }
+  },
+  answerKey:{
+    diagnosis:["Astigmatisma Miopia Kompositus OD","Hipermetropia OS","Presbiopia","Anisometropia"],
+    jenisKacamata:"bifokal",
+    resep:{ odSph:"-1.25",odCyl:"-1.00",odAxis:"80",odAdisi:"+3.00", osSph:"+3.00",osCyl:"0",osAxis:"-",odAdisi:"+3.00" }
+  },
+  explanation:{
+    diagnosis:"OD: Astigmat Miopia Kompositus. OS: Hipermetropia (post-operasi katarak — IOL mungkin kurang terkoreksi). Presbiopia. Anisometropia signifikan.",
+    resep:"OD: -1.25 -1.00×80 Add +3.00. OS: +3.00 Add +3.00. Bifokal. Adisi +3.00 usia 60 tahun (maksimal).",
+    insight:["Post-katarak OS → refraksi berubah drastis — sangat normal mengalami hipermetropia residual.","Anisometropia besar (4+ D) antara OD dan OS — toleransi pasien perlu dievaluasi.","Usia 60 tahun → adisi +3.00 (maksimal presbiopia).","DM: perlu dimonitor karena fluktuasi gula bisa memengaruhi refraksi."],
+    tips:["Post-operasi katarak: koreksi residual dengan kacamata adalah normal dan BUKAN komplikasi.","Anisometropia besar pada dewasa tua: pertimbangkan lensa kontak untuk mengurangi aniseikonia.","OSCE: sebutkan riwayat operasi katarak sebagai faktor penyebab perubahan refraksi OS.","Adisi +3.00 = batas atas presbiopia — sebutkan ini kepada penguji."]
+  }
+}
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let state = { currentCase:0, completedCases:[], timerInterval:null, timerSeconds:180, timerWarned:false };
+let selectedDiag = [];
+let selectedType = '';
+
+// ═══════════════════════════════════
+// TIMER
+// ═══════════════════════════════════
+function startTimer() {
+  clearTimer();
+  state.timerSeconds=180; state.timerWarned=false;
+  const display=document.getElementById('timer-display');
+  display.classList.remove('hidden','warning');
+  updateTimerDisplay();
+  state.timerInterval=setInterval(()=>{
+    state.timerSeconds--;
+    updateTimerDisplay();
+    if(state.timerSeconds===30&&!state.timerWarned){state.timerWarned=true;display.classList.add('warning');showToast('⚠️ Waktu tersisa 30 detik!',true);}
+    if(state.timerSeconds<=0){clearTimer();showToast('⏰ Waktu habis! Silahkan submit jawaban.',true);}
+  },1000);
+}
+function clearTimer(){if(state.timerInterval)clearInterval(state.timerInterval);state.timerInterval=null;}
+function updateTimerDisplay(){const m=Math.floor(state.timerSeconds/60),s=state.timerSeconds%60;document.getElementById('timer-text').textContent=`${m}:${s.toString().padStart(2,'0')}`;}
+
+// ═══════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════
+function showScreen(id){['welcome-screen','case-screen','result-screen','complete-screen'].forEach(s=>document.getElementById(s).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+function startApp(){state.currentCase=0;state.completedCases=[];showScreen('case-screen');renderCase(0);}
+function restartApp(){state.currentCase=0;state.completedCases=[];clearTimer();document.getElementById('timer-display').classList.add('hidden');showScreen('welcome-screen');}
+
+// ═══════════════════════════════════
+// RENDER
+// ═══════════════════════════════════
+function renderCase(idx){
+  const c=CASES[idx];
+  renderProgress(idx);
+  renderCaseMeta(c);
+  renderScenario(c);
+  renderForm(c);
+  startTimer();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderProgress(activeIdx){
+  const nav=document.getElementById('progress-nav');
+  nav.innerHTML='';
+  CASES.forEach((c,i)=>{
+    const dot=document.createElement('div');
+    dot.className='prog-dot';
+    if(state.completedCases.includes(i)) dot.classList.add('done');
+    else if(i===activeIdx) dot.classList.add('active');
+    dot.innerHTML=`<span>${i+1}</span>`;
+    dot.title=c.title;
+    nav.appendChild(dot);
+    if(i<CASES.length-1){const line=document.createElement('div');line.className='prog-line'+(state.completedCases.includes(i)?' done':'');nav.appendChild(line);}
+  });
+}
+
+function renderCaseMeta(c){
+  const diffClass=['','diff-1','diff-1','diff-2','diff-3','diff-3','diff-4'][Math.min(c.difficulty,6)]||'diff-2';
+  document.getElementById('case-meta').innerHTML=`<span class="case-badge">Kasus ${c.id} dari ${CASES.length}</span><span class="diff-badge ${diffClass}">${c.diffLabel}</span>`;
+}
+
+function buildTrialRows(trials){
+  return trials.map(t=>`
+    <div class="trial-row">
+      <span class="trial-lens">${t.lens}</span>
+      <span class="trial-arrow">→</span>
+      <span class="trial-vis">${t.vis}</span>
+      ${t.ok?'<span class="trial-tick">✅</span>':''}
+    </div>`).join('');
+}
+
+function renderScenario(c){
+  const e=c.examData;
+  function eyeBlock(eye,data){
+    const tag=eye==='od'?'<span class="eye-tag od">OD</span>':'<span class="eye-tag os">OS</span>';
+    const label=eye==='od'?'Mata Kanan (OD)':'Mata Kiri (OS)';
+    return `
+      <div class="exam-eye-block">
+        <div class="exam-eye-label">${tag} ${label}</div>
+        <div class="exam-row"><span class="exam-key">Visus tanpa koreksi:</span><span class="exam-val">${data.visus}</span></div>
+        <div class="exam-row"><span class="exam-key">Pinhole:</span><span class="exam-val">${data.ph}</span></div>
+        <div class="exam-trial">
+          <div class="trial-header">Trial Frame:</div>
+          ${buildTrialRows(data.trial)}
+          ${data.trialNote?`<div style="font-size:11px;color:var(--ink-soft);margin-top:5px;font-style:italic">📌 ${data.trialNote}</div>`:''}
+        </div>
+      </div>`;
+  }
+  document.getElementById('scenario-card').innerHTML=`
+    <h2><span class="icon">📋</span> Skenario Klinis</h2>
+    <div class="scenario-text">${c.scenario}</div>
+    <div class="exam-results">
+      <div class="exam-results-title">🔬 Hasil Pemeriksaan</div>
+      <div class="exam-grid">
+        ${eyeBlock('od',e.od)}
+        ${eyeBlock('os',e.os)}
+      </div>
+    </div>`;
+}
+
+function renderForm(c){
+  selectedDiag=[];
+  selectedType='';
+  const ak=c.answerKey;
+  const hasAdisi=ak.resep.odAdisi&&ak.resep.odAdisi!=='-';
+
+  const chips=DIAG_CHIPS.map(d=>`<div class="diag-chip" id="chip-${d.replace(/\s+/g,'_')}" onclick="toggleChip('${d}')">${d}</div>`).join('');
+
+  document.getElementById('form-area').innerHTML=`
+    <!-- Diagnosis -->
+    <div class="form-card">
+      <div class="form-section-title">🔍 Diagnosis Kerja</div>
+      <div class="form-group">
+        <label>Pilih semua komponen diagnosis yang sesuai</label>
+        <div class="diag-chips-wrap">${chips}</div>
+        <div class="input-hint">Klik chip untuk memilih / batal. Bisa pilih lebih dari satu.</div>
+      </div>
+      <div class="form-group">
+        <label>Diagnosis yang dipilih</label>
+        <div class="diag-selected-preview empty" id="diag-preview">Belum ada yang dipilih</div>
+      </div>
+    </div>
+
+    <!-- Resep -->
+    <div class="form-card">
+      <div class="form-section-title">💊 Resep Kacamata</div>
+      <div class="form-group">
+        <label>Jenis Kacamata</label>
+        <div class="resep-type-select">
+          <div class="type-option" id="type-mono" onclick="selectType('monofokal')">🔲 Monofokal</div>
+          <div class="type-option" id="type-bi" onclick="selectType('bifokal')">⬜ Bifokal / Progresif</div>
+        </div>
+      </div>
+      <div class="resep-table-wrap">
+        <table class="resep-table">
+          <thead>
+            <tr>
+              <th style="width:46px"></th>
+              <th>Sph (S)</th><th>Cyl (C)</th><th>Axis</th>
+              <th class="${hasAdisi?'':'hidden-adisi'}" id="th-adisi">Adisi (Add)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="od-label">OD</td>
+              <td><input type="text" id="r-od-sph" placeholder="0/-1.50/+1.00"></td>
+              <td><input type="text" id="r-od-cyl" placeholder="0/-1.50"></td>
+              <td><input type="text" id="r-od-axis" placeholder="-/90/180"></td>
+              <td class="${hasAdisi?'':'hidden-adisi'}" id="td-od-adisi"><input type="text" id="r-od-adisi" placeholder="+2.00"></td>
+            </tr>
+            <tr>
+              <td class="os-label">OS</td>
+              <td><input type="text" id="r-os-sph" placeholder="0/-1.50/+1.00"></td>
+              <td><input type="text" id="r-os-cyl" placeholder="0/-1.50"></td>
+              <td><input type="text" id="r-os-axis" placeholder="-/90/180"></td>
+              <td class="${hasAdisi?'':'hidden-adisi'}" id="td-os-adisi"><input type="text" id="r-os-adisi" placeholder="+2.50"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="adisi-note">* Isi 0 atau - jika tidak ada nilai. Adisi hanya untuk bifokal/progresif.</p>
+    </div>
+
+    <button class="btn-submit" onclick="submitAnswer()">Submit Jawaban →</button>`;
+}
+
+function toggleChip(diag){
+  const id='chip-'+diag.replace(/\s+/g,'_');
+  const el=document.getElementById(id);
+  if(selectedDiag.includes(diag)){selectedDiag=selectedDiag.filter(d=>d!==diag);el.classList.remove('selected');}
+  else{selectedDiag.push(diag);el.classList.add('selected');}
+  updateDiagPreview();
+}
+
+function updateDiagPreview(){
+  const preview=document.getElementById('diag-preview');
+  if(selectedDiag.length===0){preview.textContent='Belum ada yang dipilih';preview.classList.add('empty');}
+  else{preview.textContent=selectedDiag.join(' + ');preview.classList.remove('empty');}
+}
+
+function selectType(t){
+  selectedType=t;
+  document.getElementById('type-mono').classList.toggle('selected',t==='monofokal');
+  document.getElementById('type-bi').classList.toggle('selected',t==='bifokal');
+}
+
+// ═══════════════════════════════════
+// SCORING
+// ═══════════════════════════════════
+function parseDiopter(s){if(!s||s==='-'||s==='')return null;const n=parseFloat(s.toString().replace(',','.').trim());return isNaN(n)?null:n;}
+
+function checkDiopter(user,key,tol=0.25){
+  const u=parseDiopter(user),k=parseDiopter(key);
+  if(k===null||k===0){if(u===null||u===0)return'full';if(Math.abs(u)<=tol)return'partial';return'wrong';}
+  if(u===null)return'wrong';
+  const d=Math.abs(u-k);
+  if(d===0)return'full';if(d<=tol)return'partial';return'wrong';
+}
+
+function checkAxis(user,key){
+  if(key==='-'||key===''){if(!user||user==='-'||user==='')return'full';return'wrong';}
+  const u=parseInt(user),k=parseInt(key);
+  if(isNaN(u))return'wrong';
+  if(u===k)return'full';if(Math.abs(u-k)<=10)return'partial';return'wrong';
+}
+
+function scoreResult(r){return r==='full'?1:r==='partial'?0.5:0;}
+
+function checkDiagnosis(selected,required){
+  let found=0;
+  const norm=s=>s.toLowerCase().replace(/\s+/g,' ').trim();
+  required.forEach(req=>{if(selected.some(s=>norm(s)===norm(req)))found++;});
+  // penalti untuk diagnosis berlebihan
+  const extra=selected.length-found;
+  return{found,total:required.length,extra};
+}
+
+function calculateScore(c,answers){
+  const ak=c.answerKey;
+  const results={};
+
+  // Diagnosis (40 pts)
+  const diag=checkDiagnosis(answers.diagnosis,ak.diagnosis);
+  const diagPct=diag.total>0?diag.found/diag.total:0;
+  const penalty=Math.min(diag.extra*5,15);
+  const diagScore=Math.max(0,Math.round(diagPct*40)-penalty);
+  results.diagnosis={score:diagScore,max:40,found:diag.found,total:diag.total,extra:diag.extra,
+    status:diag.found===diag.total&&diag.extra===0?'correct':diag.found>0?'partial':'wrong'};
+
+  // Jenis Kacamata (10 pts)
+  const typeOk=(answers.jenisKacamata||'').toLowerCase()===ak.jenisKacamata.toLowerCase();
+  results.jenisKacamata={score:typeOk?10:0,max:10,status:typeOk?'correct':'wrong'};
+
+  // Resep (50 pts)
+  const hasAdisi=ak.resep.odAdisi&&ak.resep.odAdisi!=='-';
+  const resepFields=[
+    {key:'odSph',user:answers.resep.odSph,type:'diopter',pts:6},
+    {key:'odCyl',user:answers.resep.odCyl,type:'diopter',pts:5},
+    {key:'odAxis',user:answers.resep.odAxis,type:'axis',pts:4},
+    {key:'osSph',user:answers.resep.osSph,type:'diopter',pts:6},
+    {key:'osCyl',user:answers.resep.osCyl,type:'diopter',pts:5},
+    {key:'osAxis',user:answers.resep.osAxis,type:'axis',pts:4},
+  ];
+  if(hasAdisi){resepFields.push({key:'odAdisi',user:answers.resep.odAdisi,type:'diopter',pts:10});resepFields.push({key:'osAdisi',user:answers.resep.osAdisi,type:'diopter',pts:10});}
+
+  let resepTotal=0,resepMax=0;
+  const resepDetails={};
+  resepFields.forEach(f=>{
+    const r=f.type==='diopter'?checkDiopter(f.user,ak.resep[f.key]):checkAxis(f.user,ak.resep[f.key]);
+    const pts=Math.round(scoreResult(r)*f.pts);
+    resepTotal+=pts;resepMax+=f.pts;
+    resepDetails[f.key]={result:r,score:pts,max:f.pts};
+  });
+  const resepScore=Math.round((resepTotal/resepMax)*50);
+  results.resep={score:resepScore,max:50,details:resepDetails,status:resepScore>=45?'correct':resepScore>=25?'partial':'wrong'};
+
+  const total=results.diagnosis.score+results.jenisKacamata.score+results.resep.score;
+  return{results,total};
+}
+
+// ═══════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════
+function submitAnswer(){
+  if(selectedDiag.length===0){showToast('⚠️ Pilih minimal satu diagnosis.',true);return;}
+  if(!selectedType){showToast('⚠️ Pilih jenis kacamata.',true);return;}
+
+  const answers={
+    diagnosis:selectedDiag,
+    jenisKacamata:selectedType,
+    resep:{
+      odSph:document.getElementById('r-od-sph').value,
+      odCyl:document.getElementById('r-od-cyl').value,
+      odAxis:document.getElementById('r-od-axis').value,
+      odAdisi:document.getElementById('r-od-adisi')?document.getElementById('r-od-adisi').value:'-',
+      osSph:document.getElementById('r-os-sph').value,
+      osCyl:document.getElementById('r-os-cyl').value,
+      osAxis:document.getElementById('r-os-axis').value,
+      osAdisi:document.getElementById('r-os-adisi')?document.getElementById('r-os-adisi').value:'-',
+    }
+  };
+
+  clearTimer();
+  document.getElementById('timer-display').classList.add('hidden');
+  const c=CASES[state.currentCase];
+  const {results,total}=calculateScore(c,answers);
+  state.completedCases.push(state.currentCase);
+  renderResult(c,results,total,answers);
+  showScreen('result-screen');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════
+// RENDER RESULT
+// ═══════════════════════════════════
+function renderResult(c,results,total,answers){
+  const ak=c.answerKey;
+  const exp=c.explanation;
+  const isLast=state.currentCase===CASES.length-1;
+  const scoreClass=total>=90?'score-perfect':total>=70?'score-good':total>=50?'score-fair':'score-poor';
+  const scoreMsg=total>=90?'Sangat Baik! 🎉':total>=70?'Baik 👍':total>=50?'Cukup — perlu latihan lagi':'Perlu Banyak Belajar 📚';
+  const hasAdisi=ak.resep.odAdisi&&ak.resep.odAdisi!=='-';
+  function si(s){return s==='correct'?'✓':s==='partial'?'~':'✗';}
+  function sl(s){return s==='correct'?'Benar':s==='partial'?'Sebagian':'Salah';}
+
+  function resepCell(key){
+    const rd=results.resep.details;
+    if(!rd[key])return'<td>—</td>';
+    const r=rd[key];
+    const bg=r.result==='full'?'rgba(61,107,79,0.12)':r.result==='partial'?'rgba(201,168,76,0.15)':'rgba(139,58,58,0.12)';
+    return`<td style="background:${bg};text-align:center;font-size:13px;padding:5px 8px;">${ak.resep[key]||'—'}</td>`;
+  }
+
+  const diagStatusClass=results.diagnosis.extra>0?'partial':results.diagnosis.status;
+
+  const html=`
+    <div class="result-header">
+      <div class="score-circle ${scoreClass}"><span class="score-num">${total}</span><span class="score-label">/ 100</span></div>
+      <h2 class="result-title">${c.title}</h2>
+      <p class="result-subtitle">${scoreMsg}</p>
+    </div>
+
+    <div class="feedback-section">
+      <h3>🔍 Diagnosis <span style="font-size:13px;color:var(--ink-soft);font-weight:400">(${results.diagnosis.score}/${results.diagnosis.max} poin)</span></h3>
+      <div class="feedback-item ${diagStatusClass}">
+        <div class="feedback-item-header">
+          <span class="fb-label">Diagnosis Kerja — ${si(results.diagnosis.status)}</span>
+          <span class="fb-status">${sl(results.diagnosis.status)} (${results.diagnosis.found}/${results.diagnosis.total} komponen benar${results.diagnosis.extra>0?`, +${results.diagnosis.extra} berlebihan`:''})</span>
+        </div>
+        <div class="fb-user-ans">Jawaban Anda: <span>${answers.diagnosis.join(' + ')||'—'}</span></div>
+        <div class="fb-correct-ans">Jawaban benar: <span>${ak.diagnosis.join(' + ')}</span></div>
+        <div class="fb-explanation">${exp.diagnosis}${results.diagnosis.extra>0?' <em>(Penalti: diagnosis berlebihan mengurangi poin)</em>':''}</div>
+      </div>
+    </div>
+
+    <div class="feedback-section">
+      <h3>💊 Resep Kacamata <span style="font-size:13px;color:var(--ink-soft);font-weight:400">(${results.resep.score+results.jenisKacamata.score}/${results.resep.max+results.jenisKacamata.max} poin)</span></h3>
+      <div class="feedback-item ${results.jenisKacamata.status}" style="margin-bottom:10px">
+        <div class="feedback-item-header">
+          <span class="fb-label">Jenis Kacamata</span>
+          <span class="fb-status">${sl(results.jenisKacamata.status)}</span>
+        </div>
+        <div class="fb-user-ans">Jawaban Anda: <span>${answers.jenisKacamata||'(tidak dipilih)'}</span></div>
+        <div class="fb-correct-ans">Jawaban benar: <span>${ak.jenisKacamata}</span></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin-bottom:7px">Koreksi per sel resep (hijau=benar, kuning=toleransi ±0.25D, merah=salah):</p>
+      <div class="resep-table-wrap">
+        <table class="resep-table">
+          <thead><tr><th></th><th>Sph</th><th>Cyl</th><th>Axis</th>${hasAdisi?'<th>Adisi</th>':''}</tr></thead>
+          <tbody>
+            <tr><td class="od-label">OD</td>${resepCell('odSph')}${resepCell('odCyl')}${resepCell('odAxis')}${hasAdisi?resepCell('odAdisi'):''}</tr>
+            <tr><td class="os-label">OS</td>${resepCell('osSph')}${resepCell('osCyl')}${resepCell('osAxis')}${hasAdisi?resepCell('osAdisi'):''}</tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="fb-explanation" style="margin-top:10px;padding:9px 12px;background:var(--ivory-deep);border-radius:6px;font-size:13px;color:var(--ink-mid)">${exp.resep}</div>
+    </div>
+
+    <div class="insight-card">
+      <h3>💡 Insight Klinis</h3>
+      <ul class="insight-list">${exp.insight.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+    <div class="tips-card">
+      <h3>✦ Tips OSCE</h3>
+      <ul class="tips-list">${exp.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+    </div>
+
+    <button class="btn-next ${isLast?'btn-finish':''}" onclick="${isLast?'showComplete()':'nextCase()'}">
+      ${isLast?'🎓 Selesaikan Semua Kasus':`Lanjut ke Kasus ${state.currentCase+2} →`}
+    </button>`;
+
+  document.getElementById('result-screen').innerHTML=html;
+}
+
+function nextCase(){state.currentCase++;document.getElementById('timer-display').classList.remove('warning');selectedDiag=[];selectedType='';showScreen('case-screen');renderCase(state.currentCase);}
+function showComplete(){clearTimer();document.getElementById('timer-display').classList.add('hidden');showScreen('complete-screen');window.scrollTo({top:0,behavior:'smooth'});}
+
+function showToast(msg,isWarning=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isWarning?' warning':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+</script>
+</body>
+</html>
